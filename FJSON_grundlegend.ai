@@ -1,0 +1,8 @@
+
+
+
+class Assigner_HT_Zeiger_JSON_Wert
+{
+      methods:
+         static void assign(&HT_Zeiger_JSON_Wert w1,&HT_Zeiger_JSON_Wert w2);
+};

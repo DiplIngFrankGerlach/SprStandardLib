@@ -1,0 +1,12 @@
+
+
+
+class FullURLparser
+{
+   PrintfClass pfc;
+methods:
+   int istZahl(char z);
+   int parse(&String_16 eingabe,&String_16 dnsNameOrIP,&int port, &String_16 filePath,&int ist_https);
+
+   void UnitTest();
+};

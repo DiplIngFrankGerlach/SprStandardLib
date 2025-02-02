@@ -1,0 +1,14 @@
+
+
+
+class Base64
+{
+    String_16 wandelTabelle;
+methods:
+    Base64();
+    void kodiere(&String_16 quelle,&String_16 ziel);
+
+    int dekodiere(&String_16 b64kodiert,&String_16 ausgabe);
+
+    int decodiereEinZeichen(char zc);
+};

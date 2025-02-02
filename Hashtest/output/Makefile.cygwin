@@ -1,0 +1,53 @@
+
+####################################################################
+#Sappeur 4.0 Makefile
+#
+# fuer CYGWIN
+####################################################################
+
+#ls *cpp|sed "s/.cpp$/.o \\\\/g"
+OBJECTS= \
+main.o \
+mapping.o \
+AppMain.o \
+Hashtables.o \
+Strings.o \
+System.o \
+ZKNuetzlich.o \
+determStackMemory_AppMain.ai.o \
+determStackMemory_Hashtables.ai.o \
+determStackMemory_Strings.ai.o \
+determStackMemory_System.ai.o \
+determStackMemory_ZKNuetzlich.ai.o \
+determineStackMemoryNeeds.o \
+placementNewClasses_AppMain.ai.o \
+placementNewClasses_Hashtables.ai.o \
+placementNewClasses_Strings.ai.o \
+placementNewClasses_System.ai.o \
+placementNewClasses_ZKNuetzlich.ai.o 
+
+CC = gcc
+HOMEDIR=/home/bjafrge
+SPRDIR=${HOMEDIR}/Sappeur4x/ausg/haupt
+VPATH=${SPRDIR}/cppMapping:../
+
+INCLUDE= -I${SPRDIR}/cppMapping -I. -I..  
+
+LDLIBS=-lstdc++ -lm  -std=c++17 
+
+.SUFFIXES: .o .cpp .ai
+#OPT=-O3 
+OPT=-pg
+MISC_OPT=-DSPR_USE_PTHREAD_MUTEX_LOCKS=1 -DLINUX_SAPPEUR=1 -DSPR_DEBUG=1 -DSPR_PTHREAD=1 -pthread
+
+.cpp.o:
+	$(CC) $(OPT) $(MISC_OPT) -DGCC_X86 $(INCLUDE) -c $<
+
+
+
+all:$(OBJECTS)
+	$(CC) $(OPT) $(MISC_OPT) -o HashTest $^ $(LDLIBS)
+	
+clean:
+	rm *.o HashTest 
+

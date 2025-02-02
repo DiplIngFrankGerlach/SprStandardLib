@@ -1,0 +1,124 @@
+Import
+{
+   "Strings.ad",
+   "System.ad",
+   "ZKNuetzlich.ad",
+   "FJSON_grundlegend.ad",
+   "WachsendesFeld.ad",
+   "Hashtable.ad",
+   "Scanner.ad",
+   "FJSON.ad",
+   "JSON_Eichhoernchen.ad"
+}
+
+JSON_Eichhoernchen::JSON_Eichhoernchen(JSON_Wert* stammi)
+{
+   stamm = stammi;
+   aktuellerAst = stamm;
+}
+
+&JSON_Eichhoernchen JSON_Eichhoernchen::kv(&char name[])
+{
+    var JSON_KV* kv = cast(JSON_KV*,aktuellerAst);
+    if( kv != NULL )
+    {
+        var String_16 nameStr(name);
+        var JSON_Wert* jw;
+        if(kv.gebe(nameStr,jw) == 1)
+        {
+           aktuellerAst = jw;
+        }
+        else
+        {
+            var PrintfClass pfc;
+            pfc.fstr("konnte $ nicht im KV finden").sa(name).pr();
+        }
+    }
+    else
+    {
+       var PrintfClass pfc;
+       pfc.fstr("konnte aktuellen Ast nicht in Key-Value wandeln").pr();
+    }
+    return thisref;
+}
+
+
+&JSON_Eichhoernchen JSON_Eichhoernchen::feld(int stelle)
+{
+    var JSON_Feld* feld = cast(JSON_Feld*,aktuellerAst);
+    if( feld != NULL )
+    {
+        var JSON_Wert* jw;
+        feld.gebe(stelle,jw); 
+       
+        aktuellerAst = jw;
+        
+    }
+    else
+    {
+       var PrintfClass pfc;
+       pfc.fstr("konnte aktuellen Ast nicht in Feld wandeln").pr();
+    }
+    return thisref;
+}
+
+void JSON_Eichhoernchen::gebeZK(&String_16 wert)
+{
+    var JSON_ZK* zk = cast(JSON_ZK*,aktuellerAst);
+    if( zk != NULL )
+    {
+        zk.gebe(wert);
+    }
+    else
+    {
+       var PrintfClass pfc;
+       pfc.fstr("konnte aktuellen Ast nicht in Zeichenkette wandeln").pr();
+    }
+}
+
+void JSON_Eichhoernchen::gebeNummer(&longlong wert)
+{
+    var JSON_Nummer* jnr = cast(JSON_Nummer*,aktuellerAst);
+    if( jnr != NULL )
+    {
+         wert = jnr.gebe();
+    }
+    else
+    {
+       var PrintfClass pfc;
+       pfc.fstr("konnte aktuellen Ast nicht in Nummer wandeln").pr();
+       wert = cast(longlong,0xFFFFFFFF);
+    }
+}
+
+void JSON_Eichhoernchen::gebeAktuell(&JSON_Wert* ast)
+{
+   ast = aktuellerAst;
+}
+
+void JSON_Eichhoernchen::gebeFeld(&JSON_Feld* feld)
+{
+    feld = cast(JSON_Feld*,aktuellerAst);
+
+    if( feld == NULL )
+    {
+       var PrintfClass pfc;
+       pfc.fstr("der aktuelle Ast ist kein Feld").pr();
+    }
+}
+
+void JSON_Eichhoernchen::gebeKV(&JSON_KV* jkv)
+{
+    jkv = cast(JSON_KV*,aktuellerAst);
+
+    if( jkv == NULL )
+    {
+       var PrintfClass pfc;
+       pfc.fstr("der aktuelle Ast ist kein KV").pr();
+    }
+}
+
+void JSON_Eichhoernchen::springeZumStamm()
+{
+    aktuellerAst = stamm;
+}

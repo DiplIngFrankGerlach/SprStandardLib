@@ -1,0 +1,146 @@
+Import
+{
+  "Strings.ad",
+  "ZKNuetzlich.ad",
+  "Base64.ad"
+}
+
+Base64::Base64()
+{
+   wandelTabelle.assign("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+}
+
+
+void Base64::kodiere(&String_16 quelle,&String_16 ziel)
+{
+   var int i=0; 
+   var int ia = 0;
+
+
+   var int ql = quelle.length();
+   
+   
+
+   while( i < ql )
+   {
+       var int nAusgabeOktets = 1;
+       var int oa[4];
+       oa[0] = ( cast(int,quelle.getAt(i)) >> 2 ) & 0x3F;
+       oa[1] = (cast(int,quelle.getAt(i)) << 4) & 0x30;
+       i++;
+       if( i < ql )
+       {
+           oa[1] = oa[1] | ((cast(int,quelle.getAt(i)) >> 4) & 0xF);
+           oa[2] = (cast(int,quelle.getAt(i)) << 2) & 0x3C;
+           i++;
+           if( i < ql )
+           {
+              oa[2] = oa[2] | ((cast(int,quelle.getAt(i)) >> 6) & 0x3);
+              oa[3] = (cast(int,quelle.getAt(i)) & 0x3F);
+              i++;
+              nAusgabeOktets = 4; 
+           }
+           else
+           { nAusgabeOktets = 3; }
+       }
+       else
+       { nAusgabeOktets = 2; }
+
+       for(var int j = 0; j < nAusgabeOktets; j++)
+       {
+          ziel.append( wandelTabelle.getAt( oa[j] ) );
+       }
+
+       for(var int j=nAusgabeOktets; j < 4; j++)
+       {
+          ziel.append('='); 
+       }
+   }
+}
+
+
+int Base64::dekodiere(&String_16 b64kodiert,&String_16 ausgabe)
+{
+   var int l = b64kodiert.length();
+   var int ausgabeZeiger = 0;
+   var int i=0;
+   while( i < l)
+   {
+      var char zc = b64kodiert.getAt(i);
+      var int wert6bits_0 = this.decodiereEinZeichen(zc);
+      if( wert6bits_0 < 0) { return -1; }
+
+      zc = b64kodiert.getAt(i+1);
+      var int wert6bits_1 = this.decodiereEinZeichen(zc);
+      if( wert6bits_1  < 0) { return -1; }
+
+      var int oktet0 = (wert6bits_0 << 2) | (wert6bits_1 >> 4);
+      ausgabe.append(cast(char,oktet0));
+      
+
+      zc = b64kodiert.getAt(i+2);
+      var int wert6bits_2 = this.decodiereEinZeichen(zc);
+      if( wert6bits_2 == -1) { return -1; }
+
+      if( wert6bits_2 != -2)
+      {
+         var int oktet1 = (wert6bits_1 << 4) | (wert6bits_2 >> 2);
+         ausgabe.append(cast(char,oktet1));
+
+         zc = b64kodiert.getAt(i+3);
+         var int wert6bits_3 = this.decodiereEinZeichen(zc);
+         if( wert6bits_3 == -1) { return -1; }
+
+         if( wert6bits_3 != -2)
+         {
+             var int oktet2 = (wert6bits_2 << 6) | wert6bits_3 ;
+             ausgabe.append(cast(char,oktet2));
+         }
+      }
+      i = i + 4; 
+   }
+   
+   return 1;
+}
+
+int Base64::decodiereEinZeichen(char zc)
+{
+      switch(zc)
+      {
+          case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K':
+          case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U':
+          case 'V': case 'W': case 'X': case 'Y': case 'Z':
+          { 
+              return cast(int,zc) - cast(int,'A'); 
+          }; break;
+
+          case 'a':case 'b':case 'c':case 'd':case 'e': case 'f':case 'g':case 'h':case 'i':
+          case 'j':case 'k':case 'l':case 'm':case 'n': case 'o':case 'p':case 'q':case 'r':
+          case 's':case 't':case 'u': case 'v':case 'w':case 'x':case 'y':case 'z':
+          { 
+              return cast(int,zc) - cast(int,'a') + 26; 
+          }; break;
+
+          case '0':case '1':case '2':case '3':case '4':case '5':case '6':case '7':case '8': case '9':
+          { 
+              return cast(int,zc) - cast(int,'0') + (2*26); 
+          }; break;
+
+          case '+':
+          { 
+              return cast(int,zc) - cast(int,'/') + (2*26) + 10; 
+          }; break;
+
+          case '/':
+          { 
+              return cast(int,zc) - cast(int,'/') + (2*26) + 10 + 1; 
+          }; break;
+          case '=':
+          { 
+              return -2; //Magische Zahl !
+          }; break;
+          default: { return -1; };
+      }
+      return -2;
+}
+

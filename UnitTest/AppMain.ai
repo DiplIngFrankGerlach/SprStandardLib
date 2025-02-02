@@ -1,0 +1,58 @@
+Import
+{
+   "Strings.ad",
+   "System.ad",
+   "StringUtil.ad",
+   "StringUnitTest.ad",
+   "AppMain.ad"
+
+}
+
+
+int Main::main()
+{
+   var PrintfClass pfc;
+   var CommandlineArgs cla;
+   var String_16 verb;
+   if( cla.numberOfArguments() == 2  )
+   {
+	   var String_16 name("SAPPEUR_UMGEBUNGS_VAR");
+      var Umgebung umg;
+      var String_16 wert;
+      cla.getArgument(1,verb);
+      if( verb.equals("UmgebungsVarTest") == 1 )
+      {
+         var int erfolg;
+         umg.leseVariable(name,erfolg, wert);
+         //pfc.fstr("$").sa(wert).pr();
+         if( (erfolg==1) && (wert.equals("123123")==1) )
+         {
+            pfc.fstr("Testfall UmgebungsVarTest erfolgreich").pr();
+            return 1;
+         } 
+      }
+      if( verb.equals("UmgebungsVarTest2") == 1 )
+      {
+         if( umg.leseVariable("SAPPEUR_UMGEBUNGS_VAR",wert) == 1)
+			{
+				//pfc.fstr("$").sa(wert).pr();
+				if( wert.equals("123123") == 1 )  
+				{
+					pfc.fstr("Testfall UmgebungsVarTest 2 erfolgreich").pr();
+					return 1;
+				} 
+			}
+	   }		
+      
+      pfc.fstr("Testfall UmgebungsVarTest fehlgeschlagen").pr();
+      return -1;
+   }
+	SPRFile::UnitTest();
+	
+   StringUnitTest::run();
+	
+   StringUtil::UnitTest();
+
+   
+   return 1;
+}

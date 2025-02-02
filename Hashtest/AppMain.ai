@@ -1,0 +1,43 @@
+Import
+{
+   "Strings.ad",
+   "System.ad",
+   "StringUtil.ad",
+   "Hashtable.ad",
+   "AppMain.ad"
+
+}
+
+
+int Main::main()
+{
+   var SPHT_String_16_String_16 ht;
+
+   //Messe die Leistung beim Einfuegen
+   var String_16 schluessel;
+   var String_16 wert;
+   for(var int i=0; i < 1000000; i++)
+   {
+       schluessel.clear();
+       schluessel.append("Schluessel_Nr_");
+       schluessel.append(i);
+       schluessel.append("_11111111111111111111");
+
+       wert.clear();
+       wert.append("Wert_Nr_");
+       wert.append(i);
+       wert.append("abcdefghijklmnopqrstuvwxyz");
+
+       ht.insert(schluessel,wert);
+   }
+
+   schluessel.assign("Schluessel_Nr_17777_11111111111111111111");
+   wert.clear();
+   var PrintfClass pfc;
+   if(ht.search(schluessel,wert) == 1)
+   {
+      pfc.fstr("wert ist $").sa(wert).pr();
+   }
+
+   return 1;
+}

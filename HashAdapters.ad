@@ -1,0 +1,48 @@
+/**********************************************
+ * Some Adapter classes for hashing with SPHT
+ *
+ **********************************************/
+
+
+
+    class Hash_longlong
+    {
+       methods:
+         static int hash(longlong x);
+    };
+
+    class Compare_longlong
+    {
+       methods:
+         static int compare(longlong x1,longlong x2);
+    };
+
+    class Assigner_longlong
+    {
+      methods:
+         static void assign(&longlong x1,longlong x2);
+    };
+
+    class Assigner_double
+    {
+      methods:
+         static void assign(&double x1,double x2);
+    };
+
+    class Hash_int
+    {
+       methods:
+         static int hash(int x);
+    };
+
+    class Compare_int
+    {
+       methods:
+         static int compare(int x1,int x2);
+    };
+
+    class Assigner_int
+    {
+      methods:
+         static void assign(&int x1,int x2);
+    };

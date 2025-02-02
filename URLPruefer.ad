@@ -1,0 +1,27 @@
+
+enum URLP_Zustand
+{
+   URLP_Anfang,
+   URLP_ZP,
+   URLP_ZUZ,
+   URLP_ENDE
+};
+
+class URLPruefer
+{
+   int ut_fehler;
+methods: 
+   int istEinURLResourceZeichen(char c);
+
+   /* pruefe eine HTTP URL Resource Zeichenkette */
+   int pruefeHTTP_ResourceString(&String_16 resource);
+
+   void utGut(char zk[],int pruefStelle);
+   void utFalsch(char zk[],int pruefStelle);
+
+   int lesePfadAnteil(&String_16 resource,&int stelle);
+
+
+   void UnitTest();
+};
+

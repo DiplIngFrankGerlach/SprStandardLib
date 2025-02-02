@@ -1,0 +1,41 @@
+
+
+
+class WachsendesFeld_String_16
+{
+   *String_16* _feld[];
+   int _anzGueltig;
+methods:
+
+   WachsendesFeld_String_16();
+
+   int groesse(); 
+
+   void gebe(int stelle,&String_16* nl);
+   void gebeUndWachse(int stelle,&String_16* nl);
+
+   void dazu(String_16* nlk);
+   
+   void loesche();
+};
+
+
+class WachsendesFeld_JSON_Wert
+{
+   *JSON_Wert* _feld[];
+   int _anzGueltig;
+methods:
+
+   WachsendesFeld_JSON_Wert();
+
+   int groesse(); 
+
+   void gebe(int stelle,&JSON_Wert* nl);
+   void gebeUndWachse(int stelle,&JSON_Wert* nl);
+
+   void dazu(JSON_Wert* nlk);
+   
+   void loesche();
+};
+
+

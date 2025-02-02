@@ -1,0 +1,291 @@
+
+int URLPruefer::istEinURLResourceZeichen(char c)
+{
+   switch(c)
+   {
+      case '0':case '1':case '2':case '3':case '4':case '5':case '6':case '7':case '8':case '9':
+
+      case 'a':case 'b':case 'c':case 'd':case 'e':case 'f':case 'g':case 'h':case 'i':
+      case 'j':case 'k':case 'l':case 'm':case 'n':case 'o':case 'p':case 'q':case 'r':case 's':
+      case 't':case 'u':case 'v':case 'w':case 'x':case 'y':case 'z':
+      case 'A':case 'B':case 'C':case 'D':case 'E':case 'F':case 'G':case 'H':case 'I':case 'J':
+      case 'K':case 'L':case 'M':case 'N':case 'O':case 'P':case 'Q':case 'R':case 'S':case 'T':
+      case 'U':case 'V':case 'W':case 'X':case 'Y':case 'Z':
+      case '-':
+      case '_':
+      case '?':
+      case '=':
+      case '%':
+      case '(':
+      case ')':
+      case '+':
+      case '&':
+      {
+         return 1;
+      };
+      default:{return 0;};
+   }
+   return 0;
+}
+
+int URLPruefer::lesePfadAnteil(&String_16 resource,&int stelle)
+{ 
+    var PrintfClass pfc;
+    var URLP_Zustand z;
+    z = URLP_Anfang;
+    while( z != URLP_ENDE)
+    {
+        //pfc.fstr("stelle:$, zustand:$").sa(stelle).sa(z).pr();
+        switch( z )
+        {
+           case URLP_Anfang:
+           {
+              if( stelle >= resource.length() )
+              {
+                 pfc.fstr("schlechte URL $").sa(resource).pr();
+                 return 0;
+              }
+              var char zeichen = resource.getAt(stelle);
+              if( zeichen == '.')
+              {
+                   stelle++;
+                   if( stelle >= resource.length() )
+                   {
+                      pfc.fstr("schlechte URL $").sa(resource).pr();
+                      return 0;
+                   }
+                   z = URLP_ZP;
+              }
+              else
+              {
+                  if( this.istEinURLResourceZeichen(zeichen) == 1)
+                  {
+                      stelle++;
+                      z = URLP_ZUZ; 
+                  }
+                  else
+                  {
+                     pfc.fstr("schlechte URL $").sa(resource).pr();
+                     return 0;
+                  }
+              }
+           };
+           break;
+           case URLP_ZP:
+           {
+              if( stelle >= resource.length() )
+              { 
+                 pfc.fstr("schlechte URL $").sa(resource).pr();
+                 return 0;
+              }
+              var char zeichen = resource.getAt(stelle);
+              if(  this.istEinURLResourceZeichen(zeichen) == 1)
+              {
+                  stelle++;
+                  z = URLP_ZUZ;
+              }
+              else
+              {
+                 pfc.fstr("schlechte URL $").sa(resource).pr();
+                 return 0;
+              } 
+           };
+           break;
+           case URLP_ZUZ:
+           {
+              if( stelle >= resource.length() )
+              {
+                 return 1;
+              }
+              var char zeichen = resource.getAt(stelle);
+              if(zeichen == '.' )
+              {
+                 stelle++;
+                 z = URLP_ZP;
+              }
+              else
+              {
+                 if( zeichen == '/' )
+                 {
+                    return 1;
+                 } 
+                 else
+                 {
+                    if(  this.istEinURLResourceZeichen(zeichen) == 1)
+                    {
+                        stelle++;
+                        z = URLP_ZUZ;
+                    }
+                    else
+                    {
+                        pfc.fstr("schlechte URL $").sa(resource).pr();
+                        return 0;
+                    }
+                 }
+              }
+           };
+           break;
+        }
+    }
+    return 1;
+}
+
+//baustelle
+int URLPruefer::pruefeHTTP_ResourceString(&String_16 resource)
+{
+    var PrintfClass pfc;
+    if( (resource.length() > 10000) || (resource.length() == 0) )
+    {
+        pfc.fstr("URLPruefer::pruefeHTTP_ResourceString Fehler A1 >$<").sa(resource).pr();
+        return 0;
+    }
+    var int stelle = 0; 
+    var int erfolg = 0;
+    while(stelle < resource.length() )
+    {
+        var char zeichen = resource.getAt(stelle);
+        if( zeichen == '/' )
+        {
+           stelle++;
+           if( stelle < resource.length() )
+           {
+              if(this.lesePfadAnteil(resource,stelle) == 0)
+              {
+                 pfc.fstr("URLPruefer::pruefeHTTP_ResourceString 1 schlechte URL $").sa(resource).pr();
+                 return 0;
+              }
+           }
+        } 
+        else
+        {
+           pfc.fstr("URLPruefer::pruefeHTTP_ResourceString 2 schlechte URL $").sa(resource).pr();
+           return 0;
+        }
+    }
+    return 1;
+}
+
+/* procedure for a good test case */
+void URLPruefer::utGut(char zk[],int pruefStelle)
+{
+    if( ut_fehler == 0)
+    {
+       var String_16 zks;
+       zks.assign(zk);
+       if( this.pruefeHTTP_ResourceString(zks) != 1)
+       {
+          ut_fehler = pruefStelle;
+          var PrintfClass pfc;
+          pfc.fstr("URLPruefer::UnitTest() Fehler $").sa(pruefStelle).pr();
+       }
+    }
+}
+
+/*procedure for a false test case */
+void URLPruefer::utFalsch(char zk[],int pruefStelle)
+{
+    if( ut_fehler == 0)
+    {
+       var String_16 zks;
+       zks.assign(zk);
+       if( this.pruefeHTTP_ResourceString(zks) != 0)
+       {
+          ut_fehler = pruefStelle;
+          var PrintfClass pfc;
+          pfc.fstr("URLPruefer::UnitTest() Fehler $").sa(pruefStelle).pr();
+       }
+    }
+}
+
+void URLPruefer::UnitTest()
+{
+    ut_fehler = 0;
+    var String_16 zk;
+    zk.assign("/index.html");
+    var PrintfClass pfc;
+    if( this.pruefeHTTP_ResourceString(zk) != 1)
+    {
+       pfc.fstr("URLPruefer::UnitTest() Fehler 1").pr();
+       return;
+    }
+    zk.assign("/v2/v3/index.html");
+    if( this.pruefeHTTP_ResourceString(zk) != 1)
+    {
+       pfc.fstr("URLPruefer::UnitTest() Fehler 2").pr();
+       return;
+    }
+    zk.assign("/../v3/index.html");
+    if( this.pruefeHTTP_ResourceString(zk) != 0)
+    {
+       pfc.fstr("URLPruefer::UnitTest() Fehler 3").pr();
+       return;
+    }
+    zk.assign("/.../v3/index.html");
+    if( this.pruefeHTTP_ResourceString(zk) != 0)
+    {
+       pfc.fstr("URLPruefer::UnitTest() Fehler 4").pr();
+       return;
+    }
+    zk.assign(".../v3/index.html");
+    if( this.pruefeHTTP_ResourceString(zk) != 0)
+    {
+       pfc.fstr("URLPruefer::UnitTest() Fehler 5").pr();
+       return;
+    }
+    zk.assign("...v3/index.html");
+    if( this.pruefeHTTP_ResourceString(zk) != 0)
+    {
+       pfc.fstr("URLPruefer::UnitTest() Fehler 6").pr();
+       return;
+    }
+    zk.assign("....................../v3/index.html");
+    if( this.pruefeHTTP_ResourceString(zk) != 0)
+    {
+       pfc.fstr("URLPruefer::UnitTest() Fehler 7").pr();
+       return;
+    }
+    zk.assign("/v3//index.html");
+    if( this.pruefeHTTP_ResourceString(zk) != 0)
+    {
+       pfc.fstr("URLPruefer::UnitTest() Fehler 8").pr();
+       return;
+    }
+    zk.assign("/");
+    if( this.pruefeHTTP_ResourceString(zk) != 1)
+    {
+       pfc.fstr("URLPruefer::UnitTest() Fehler 9").pr();
+       return;
+    }
+    zk.assign("/tante/onkel");
+    if( this.pruefeHTTP_ResourceString(zk) != 1)
+    {
+       pfc.fstr("URLPruefer::UnitTest() Fehler 10").pr();
+       return;
+    }
+
+    this.utGut("/x/y/y/y/y/",10);
+
+    this.utGut("/",11);
+
+    this.utFalsch("//",12);
+
+    this.utFalsch(".",13);
+
+    this.utFalsch("..",14);
+
+    this.utFalsch("...",15);
+
+    this.utFalsch("//////////",16);
+
+    this.utGut("/Zeichne?Abbildung=(sinus%20x)",11);
+
+
+    if( ut_fehler == 0 )
+    {
+       pfc.fstr("URLPruefer::UnitTest() erfolgreich").pr();
+    }
+    else
+    {
+       pfc.fstr("URLPruefer::UnitTest() Fehler $").sa(ut_fehler).pr();
+    }
+}

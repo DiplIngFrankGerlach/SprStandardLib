@@ -1,0 +1,9 @@
+
+
+class UnitTestBase64
+{
+methods:
+   static void test();
+   
+   static  void testeEinenFall(&char klartext_char[],&char erwartetKodiert_char[]);
+};

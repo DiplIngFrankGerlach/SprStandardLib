@@ -1,0 +1,28 @@
+
+/* Eine Klasse zum schnellen Durchwandern eines JSON Baums */
+class JSON_Eichhoernchen
+{
+    JSON_Wert* stamm;
+
+    JSON_Wert* aktuellerAst; 
+    
+    String_16 puffer;
+methods:
+    JSON_Eichhoernchen(JSON_Wert* stammi);
+
+    &JSON_Eichhoernchen kv(&char name[]);   
+
+    &JSON_Eichhoernchen feld(int stelle);   
+
+    void gebeZK(&String_16 wert);
+
+    void gebeNummer(&longlong wert);
+
+    void gebeAktuell(&JSON_Wert* ast);
+
+    void gebeFeld(&JSON_Feld* feld);
+
+    void gebeKV(&JSON_KV* jkv);
+
+    void springeZumStamm();
+};

@@ -1,0 +1,562 @@
+Import {
+   "Strings.ad",
+   "System.ad",
+   "ZKNuetzlich.ad",
+   "FJSON_grundlegend.ad",
+   "WachsendesFeld.ad",
+   "TCP.ad",
+   "Scanner.ad",
+   "Hashtable.ad",
+   "FJSON.ad",
+   "JSON_Eichhoernchen.ad"
+}
+
+
+
+
+JSONTyp JSON_Wert::gebeTyp()
+{
+   return typ;
+}
+
+void JSON_Wert::drucke(&String_16 ausgabe)
+{
+   ausgabe.append("FEHLER bei der Ausgabe !");
+}
+
+JSON_WW::JSON_WW(int werti)
+{
+  typ = JS_WW;
+  wert = cast(char,werti);
+}
+
+int JSON_WW::gebe()
+{
+   return cast(int, wert);
+}
+
+void JSON_WW::drucke(&String_16 ausgabe)
+{
+   var int wwi = cast(int,wert);
+   if( wwi == 1)
+   {
+      ausgabe.append("true");
+   }
+   else
+   {
+     ausgabe.append("false");
+   }
+}
+
+JSON_Nummer::JSON_Nummer(longlong werti)
+{
+   typ = JS_Nummer;
+   wert = werti;
+}
+
+longlong JSON_Nummer::gebe()
+{
+   return wert;
+}
+
+void JSON_Nummer::drucke(&String_16 ausgabe)
+{
+   ausgabe.append(wert);
+}
+
+JSON_ZK::JSON_ZK(&String_16 zki)
+{
+   typ = JS_ZK;
+   zk.assign(zki);
+}
+
+void JSON_ZK::gebe(&String_16 wert)
+{
+   wert.assign(zk);
+}
+
+void JSON_ZK::drucke(&String_16 ausgabe)
+{
+   ausgabe.append("\"");
+   ausgabe.append(zk);
+   ausgabe.append("\"");
+}
+
+JSON_Feld::JSON_Feld()
+{
+   typ = JS_Feld;
+}
+
+void JSON_Feld::dazu(JSON_Wert* wert)
+{
+  feld.dazu(wert);   
+}
+
+void JSON_Feld::gebe(int stelle, &JSON_Wert* wert)
+{
+   feld.gebe(stelle,wert);
+}
+
+void JSON_Feld::drucke(&String_16 ausgabe)
+{
+   var int fgm1 = feld.groesse() - 1;
+   ausgabe.append("[");
+   for(var int i=0; i < feld.groesse(); i++)
+   {
+      var JSON_Wert* jw;
+      feld.gebe(i,jw);
+      if( jw != NULL )
+      {
+         jw.drucke(ausgabe);
+      }
+      else 
+      {
+         ausgabe.append("null");
+      }
+      if(i < fgm1 ) {ausgabe.append(","); }
+   }
+   ausgabe.append("]");
+}
+
+int JSON_Feld::groesse()
+{
+   return feld.groesse();
+}
+
+
+
+JSON_KV::JSON_KV()
+{
+   typ = JS_KV;
+}
+
+int JSON_KV::gebe(&String_16 schluessel, &JSON_Wert* wert)
+{
+    var HT_Zeiger_Adapter_JSON_Wert haz;
+    var int ret = hashTable.search(schluessel,haz);
+    if( ret == 1)
+    {
+        wert = haz.zeiger;
+    }
+    return ret;
+}
+
+
+void JSON_KV::dazu(&String_16 schluessel, JSON_Wert* wert)
+{
+    var HT_Zeiger_Adapter_JSON_Wert haz;
+    haz.zeiger = wert;
+    hashTable.insert(schluessel,haz);
+}
+
+void JSON_KV::drucke(&String_16 ausgabe)
+{
+   ausgabe.append("{");
+   
+   hashTable.resetIterator();
+   var String_16 schluessel;
+   var HT_Zeiger_Adapter_JSON_Wert haz;
+   var int i=0;
+   var int sm1 = hashTable.size() - 1;
+   while(hashTable.nextElem(schluessel,haz) == 1)
+   {
+       ausgabe.append("\"");
+       ausgabe.append(schluessel);
+       ausgabe.append("\" : ");
+       
+       haz.zeiger.drucke(ausgabe);
+       
+       if(i < sm1 ) {ausgabe.append(","); }
+       
+       i++;
+   }
+   
+   ausgabe.append("}");
+}
+
+void JSON_KV::resetIterator()
+{
+   hashTable.resetIterator();
+}
+
+int JSON_KV::nextElem(&String_16 key,&JSON_Wert* value)
+{
+   var HT_Zeiger_Adapter_JSON_Wert haz; 
+   var int ret = hashTable.nextElem(key,haz);
+   value = haz.zeiger;
+   return ret;
+}
+
+
+
+
+FJSONParser::FJSONParser(Scanner* scanneri)
+{
+   scanner = scanneri;
+   scanner.nextToken();
+}
+
+void FJSONParser::druckeFehler(&char meldungMitEinemParameter[])
+{
+    var String_16* tokenWert;
+    scanner.currentToken(tokenType,tokenWert);
+    pfc.fstr(meldungMitEinemParameter).sa(tokenWert).pr(); 
+}
+
+/* lese ein JSON Dokument oder ein Unter-Dokument ein */
+int FJSONParser::parse(&JSON_Wert* ergebnis)
+{
+    var String_16* tokenWert;
+    scanner.currentToken(tokenType,tokenWert);
+    if(tokenType != T_DATEI_ENDE)
+    {
+        switch(tokenType)
+        {
+            case T_GESCHWEIFTE_KLAMMER_AUF: {
+                if(scanner.nextToken() != T_DATEI_ENDE)
+                {
+                   var JSON_KV* jkv;
+                   if( this.parseKV(jkv) != 1)
+                   { 
+                      this.druckeFehler("unerwartetes Dateiende in KV Liste");
+                      return -1; 
+                   }         
+                   ergebnis = cast(JSON_Wert*,jkv);
+                }
+            };break;
+            case T_ECK_KLAMMER_AUF: {
+                if(scanner.nextToken() != T_DATEI_ENDE)
+                {
+                   var JSON_Feld* jf;
+                   if( this.parseFeld(jf) != 1)
+                   { 
+                      this.druckeFehler("unerwartetes Dateiende in json Feld(1)");
+                      return -1; 
+                   }
+                   ergebnis = cast(JSON_Wert*,jf);
+                }
+            };break;
+            case T_ZEICHENKETTE: {
+               var JSON_ZK* jzk = new JSON_ZK(*tokenWert);
+               ergebnis = cast(JSON_Wert*,jzk);
+               tokenType = scanner.nextToken();
+            };break;
+            case T_ZAHL: {
+               var longlong wll = tokenWert.asNumberLL(10);
+               var JSON_Nummer* jz = new JSON_Nummer(wll);
+               ergebnis = cast(JSON_Wert*,jz);
+               tokenType = scanner.nextToken();
+            };break;
+            case T_WORT: {
+               if( tokenWert.equals("true")  != 1 )
+               {
+                   var JSON_WW* jw = new JSON_WW(1);
+                   ergebnis = cast(JSON_Wert*,jw);
+               }
+               else
+               {
+                  if(tokenWert.equals("false") != 1 )
+                  {
+                     var JSON_WW* jw = new JSON_WW(0);
+                     ergebnis = cast(JSON_Wert*,jw);
+                  }
+                  else
+                  {
+                     if(  tokenWert.equals("null") != 1)
+                     {
+                        ergebnis = NULL;
+                     }
+                     else
+                     {
+                        this.druckeFehler("unerwartetes Wort $ in json Feld");
+                        return -1; 
+                     }
+                  }
+               }
+               tokenType = scanner.nextToken();
+            };break;
+
+            default: { 
+               this.druckeFehler("unerwartetes Token $");
+               return -1;
+            };
+        }
+    }
+    return 1;
+}
+
+/* lese ein JSON Feld ein */
+int FJSONParser::parseFeld(&JSON_Feld* ergebnis)
+{
+   ergebnis = new JSON_Feld;
+
+   var String_16* tokenWert;
+   scanner.currentToken(tokenType,tokenWert);
+   
+   do{
+      switch(tokenType)
+      {
+         case T_GESCHWEIFTE_KLAMMER_AUF: {
+            if(scanner.nextToken() != T_DATEI_ENDE)
+            {
+                var JSON_KV* jkv;
+                if( this.parseKV(jkv) != 1)
+                { 
+                   this.druckeFehler("unerwartetes Dateiende in json KV Tabelle");
+                   return -1; 
+                }
+                var JSON_Wert* jw = cast(JSON_Wert*,jkv);
+                ergebnis.dazu(jw);
+            }
+         };break;
+         case T_ECK_KLAMMER_AUF: {
+            if(scanner.nextToken() != T_DATEI_ENDE)
+            {
+                var JSON_Feld* unterFeld;
+                if( this.parseFeld(unterFeld) != 1)
+                {     
+                    this.druckeFehler("unerwartetes Dateiende in json Feld(2)");
+                    return -1; 
+                }
+                var JSON_Wert* jw = cast(JSON_Wert*,unterFeld);
+                ergebnis.dazu( jw );
+            }
+         };break;
+
+         case T_ZAHL:{
+            var longlong wll = tokenWert.asNumberLL(10);
+            var JSON_Nummer* jzn = new JSON_Nummer(wll); 
+            var JSON_Wert* jw = cast(JSON_Wert*,jzn);
+            ergebnis.dazu( jw );
+            if(scanner.nextToken() == T_DATEI_ENDE)
+            {
+               this.druckeFehler("Datei zu frueh zu Ende in JSON Feld(Zahl)");
+               return -1;
+            }
+         };break;
+         case T_ZEICHENKETTE:{
+            var JSON_ZK* jzk = new JSON_ZK(*tokenWert); 
+            var JSON_Wert* jw = cast(JSON_Wert*,jzk);
+            ergebnis.dazu( jw );
+            if(scanner.nextToken() == T_DATEI_ENDE)
+            {
+               this.druckeFehler("Datei zu frueh zu Ende in JSON Feld(Zeichenkette)");
+               return -1;
+            }
+         };break;
+         case T_WORT: {
+               if( tokenWert.equals("true")  != 1 )
+               {
+                   var JSON_WW* jww = new JSON_WW(1);
+                   var JSON_Wert* jw = cast(JSON_Wert*,jww);
+                   ergebnis.dazu( jw );
+               }
+               else
+               {
+                  if(tokenWert.equals("false") != 1 )
+                  {
+                     var JSON_WW* jww = new JSON_WW(0);
+                     var JSON_Wert* jw = cast(JSON_Wert*,jww);
+                     ergebnis.dazu( jw );
+                  }
+                  else
+                  {
+                     if(  tokenWert.equals("null") != 1)
+                     {
+                        var JSON_Wert* nullj;
+                        ergebnis.dazu(nullj);
+                     }
+                     else
+                     {
+                        this.druckeFehler("unerwartetes Wort $ in json Feld");
+                        return -1; 
+                     }
+                  }
+               }
+               tokenType = scanner.nextToken();
+         };break;
+         case T_ECK_KLAMMER_ZU: {};break; //leeres Feld ?
+         default: { 
+            this.druckeFehler("Ungueltiges Token $ in JSON Feld ");
+            return -1; 
+         };
+      }
+      scanner.currentToken(tokenType,tokenWert);
+      switch(tokenType)
+      {
+         case T_KOMMA:{
+            if(scanner.nextToken() == T_DATEI_ENDE)
+            {
+               this.druckeFehler("unerwartetes Dateiende in JSON Feld");
+               return -1;
+            }
+         };break;
+         case T_ECK_KLAMMER_ZU: {};break; 
+         default: { 
+            this.druckeFehler("unerwartetes Token $ in JSON Feld");
+            return -1; 
+         };
+      }
+      scanner.currentToken(tokenType,tokenWert);
+   }
+   while( tokenType != T_ECK_KLAMMER_ZU );
+   scanner.nextToken();
+   return 1;
+}
+
+/* lese die JSON Key Value Liste ein */
+int FJSONParser::parseKV(&JSON_KV* ergebnis)
+{
+   var String_16* tokenWert;
+   scanner.currentToken(tokenType,tokenWert);
+   
+   ergebnis = new JSON_KV;
+   
+   do
+   {
+      var String_16 name;
+      name.assign(tokenWert);
+      switch(tokenType)
+      {
+         case T_ZEICHENKETTE:{
+            if(scanner.nextToken() == T_DOPPEL_PUNKT)
+            {
+               if(scanner.nextToken() != T_DATEI_ENDE)
+               {
+                  var JSON_Wert* jw;
+                  if( this.parse(jw) == 1)
+                  {
+                     ergebnis.dazu(name,jw);               
+                  }
+                  else
+                  {
+                     this.druckeFehler("Fehler in JSON KV");
+                     return -1;
+                  }
+               }
+               else
+               {
+                  this.druckeFehler("unerwartetes Token $ in JSON KV");
+                  return -1;
+               }
+            }
+            else
+            {
+                this.druckeFehler("unerwartetes Token $ in JSON KV");
+                return -1;
+            }
+         };break;
+         case T_GESCHWEIFTE_KLAMMER_ZU:{
+            //leere Liste
+         };break;
+         default: { 
+            this.druckeFehler("unerwartetes Token $ in JSON KV");
+            return -1;
+         };
+      }
+      scanner.currentToken(tokenType,tokenWert);
+      if(tokenType == T_KOMMA)
+      {
+        if( scanner.nextToken() == T_GESCHWEIFTE_KLAMMER_ZU )
+        {
+            this.druckeFehler("unerwartetes Komma in JSON KV");
+            return -1;
+        }
+      }
+      scanner.currentToken(tokenType,tokenWert);
+   }
+   while(tokenType != T_GESCHWEIFTE_KLAMMER_ZU);
+   scanner.nextToken(); 
+
+   return 1;
+}
+
+SchoenDrucker::SchoenDrucker()
+{
+   anzEinrueckung = 0;
+   ausgabe = new String_16;
+}
+
+void SchoenDrucker::drucke(JSON_Wert* knoten,int einruecken)
+{
+   if(einruecken){ this.drucke_LZ_links(); }
+
+   switch(knoten.gebeTyp() )
+   {
+      case JS_WW:{      knoten.drucke(*ausgabe); };break;
+      case JS_Nummer: { knoten.drucke(*ausgabe); };break;
+      case JS_ZK:{      knoten.drucke(*ausgabe); };break;
+      case JS_Feld: {
+           var JSON_Feld* jf = cast(JSON_Feld*,knoten);
+           ausgabe.append("[\n");
+
+           anzEinrueckung = anzEinrueckung + 3;
+           var int fgm1 = jf.feld.groesse() - 1;
+           for(var int i=0; i < jf.feld.groesse(); i++)
+           {
+              var JSON_Wert* jw;
+              jf.feld.gebe(i,jw);
+              if( jw != NULL )
+              {
+                 this.drucke(jw,1);
+              }
+              else 
+              {
+                 this.drucke_LZ_links();
+                 ausgabe.append("null");
+              }
+              if(i < fgm1 ) {ausgabe.append(",\n"); }
+           }
+           ausgabe.append("\n");
+           anzEinrueckung = anzEinrueckung - 3;
+           this.drucke_LZ_links();
+           ausgabe.append("]\n");
+      };break;
+      case JS_KV: {
+          ausgabe.append("{\n");
+
+          anzEinrueckung = anzEinrueckung + 3;
+          var JSON_KV* jkv = cast(JSON_KV*,knoten);
+
+   
+          jkv.hashTable.resetIterator();
+          var String_16 schluessel;
+          var HT_Zeiger_Adapter_JSON_Wert haz;
+          var int i=0;
+          var int sm1 = jkv.hashTable.size() - 1;
+          while(jkv.hashTable.nextElem(schluessel,haz) == 1)
+          {
+              this.drucke_LZ_links();
+              ausgabe.append("\"");
+              ausgabe.append(schluessel);
+              ausgabe.append("\" : ");
+       
+              this.drucke(haz.zeiger,0);
+       
+              if(i < sm1 ) {ausgabe.append(",\n"); }
+       
+              i++;
+          }
+          anzEinrueckung = anzEinrueckung - 3;
+          ausgabe.append("\n");
+          this.drucke_LZ_links();
+          ausgabe.append("}");
+   
+      }; break;
+      default: {ausgabe.append("Fehler in der JSON Struktur !");};
+   }
+}
+
+void SchoenDrucker::drucke_LZ_links()
+{
+    for(var int i=0; i < anzEinrueckung; i++) { ausgabe.append(' '); }
+}
+
+void SchoenDrucker::gebe(&String_16* ziel)
+{
+   ziel = ausgabe;
+}
+
+
+
+

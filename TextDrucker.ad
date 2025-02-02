@@ -1,0 +1,25 @@
+
+
+class TextDrucker
+{
+    String_16 formatStr;//Beispiel: "die Mauer ist $m lang"
+    String_16 ausgabe;
+    String_16 puffer;
+    int ausgabeStelle;
+methods:
+
+    &TextDrucker fstr(&char fstr[]);
+    &TextDrucker sa(int i);
+    &TextDrucker sa(&String_16 s);
+    &TextDrucker sa(longlong i);
+    &TextDrucker sa(char s[]);
+    &TextDrucker sa(char c);
+
+    &TextDrucker reset();
+
+    void ausgeben(&String_16 ziel);
+
+    void ausgebenDazu(&String_16 ziel);
+
+    static void UnitTest();
+};

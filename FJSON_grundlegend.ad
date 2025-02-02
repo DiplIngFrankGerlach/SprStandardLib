@@ -1,0 +1,17 @@
+
+
+enum JSONTyp { JS_WW, JS_Nummer, JS_ZK, JS_Feld, JS_KV };
+
+
+class JSON_Wert
+{
+   JSONTyp typ;
+methods:
+   JSONTyp gebeTyp();
+
+   virtual void drucke(&String_16 ziel);
+
+};
+
+
+

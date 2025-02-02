@@ -1,0 +1,139 @@
+
+
+
+
+
+&TextDrucker TextDrucker::fstr(&char fstr[])
+{
+   formatStr.assign(fstr);
+   this.reset();
+
+   return thisref;
+}
+
+
+&TextDrucker TextDrucker::sa(int i)
+{
+   puffer.clear();
+   puffer.append(i,10);
+   this.sa(puffer);
+   return thisref;
+}
+
+&TextDrucker TextDrucker::sa(&String_16 s)
+{
+   while((ausgabeStelle < formatStr.length()) && (formatStr.getAt(ausgabeStelle) != '$') )
+   {
+      ausgabe.append(formatStr.getAt(ausgabeStelle));
+      ausgabeStelle++;
+   }
+   if(ausgabeStelle < formatStr.length())
+   {
+      ausgabe.append(s);
+      ausgabeStelle++;
+   }
+   return thisref;
+}
+
+&TextDrucker TextDrucker::sa(longlong i)
+{
+   puffer.clear();
+   puffer.append(i,10);
+   this.sa(puffer);
+   return thisref;
+}
+
+
+&TextDrucker TextDrucker::sa(char s[])
+{
+   puffer.clear();
+   puffer.append(s);
+   this.sa(puffer);
+   return thisref;
+}
+
+&TextDrucker TextDrucker::sa(char c)
+{
+   puffer.clear();
+   puffer.append(c);
+   this.sa(puffer);
+   return thisref;
+  
+}
+
+/*setze den TextDrucker zurueck, so dass der FormatString neu ausgedruckt werden kann */
+&TextDrucker TextDrucker::reset()
+{
+   ausgabeStelle = 0;
+   ausgabe.clear();
+   return thisref;
+}
+
+void TextDrucker::ausgeben(&String_16 ziel)
+{
+   while(ausgabeStelle < formatStr.length() )
+   {
+      ausgabe.append(formatStr.getAt(ausgabeStelle));
+      ausgabeStelle++;
+   }
+   ziel.assign(ausgabe);
+}
+
+void TextDrucker::ausgebenDazu(&String_16 ziel)
+{
+   while(ausgabeStelle < formatStr.length() )
+   {
+      ausgabe.append(formatStr.getAt(ausgabeStelle));
+      ausgabeStelle++;
+   }
+   ziel.append(ausgabe);
+}
+
+void TextDrucker::UnitTest()
+{
+   var TextDrucker td;
+   td.fstr("Das Haus ist $m breit, $m lang und $m hoch").sa(10).sa(8).sa(9);
+
+   var PrintfClass pfc;
+   var String_16 ergebnis;
+   td.ausgeben(ergebnis);
+   if( ergebnis.equals("Das Haus ist 10m breit, 8m lang und 9m hoch") != 1)
+   {
+      pfc.fstr("Fehler 1 in  TextDrucker::UnitTest() $").sa(ergebnis).pr();
+      return;
+   }
+
+   td.fstr("Die Katze heisst $").sa("Helga").ausgeben(ergebnis);
+   if( ergebnis.equals("Die Katze heisst Helga") != 1)
+   {
+      pfc.fstr("Fehler 2 in  TextDrucker::UnitTest() $").sa(ergebnis).pr();
+      return;
+   }
+   
+   td.fstr("$a$b$").sa("Hans").sa(1).sa(999999).ausgeben(ergebnis);
+   if( ergebnis.equals("Hansa1b999999") != 1)
+   {
+      pfc.fstr("Fehler 3 in  TextDrucker::UnitTest() $").sa(ergebnis).pr();
+      return;
+   }
+
+ 
+   td.fstr("$$$$$").sa('a').sa(1).sa(999999).sa("Udo").sa(-111).ausgeben(ergebnis);
+   if( ergebnis.equals("a1999999Udo-111") != 1)
+   {
+      pfc.fstr("Fehler 4 in  TextDrucker::UnitTest() $").sa(ergebnis).pr();
+      return;
+   }
+
+   td.fstr("x$x$x$").sa(0).sa(1).sa(0).ausgeben(ergebnis);
+   if( ergebnis.equals("x0x1x0") != 1)
+   {
+      pfc.fstr("Fehler 5 in  TextDrucker::UnitTest() $").sa(ergebnis).pr();
+      return;
+   }
+
+
+   pfc.fstr("TextDrucker::UnitTest() erfolgreich !").pr();
+}
+
+

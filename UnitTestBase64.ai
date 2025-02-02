@@ -1,0 +1,134 @@
+Import
+{
+  "Strings.ad",
+  "System.ad",
+  "Base64.ad",
+  "UnitTestBase64.ad"
+}
+
+void UnitTestBase64::test()
+{
+    var PrintfClass pfc;
+    var Base64 b64Wandler;
+
+    var String_16 eingabe("Walter von der Vogelweide"); 
+    var String_16 ausgabe;
+    b64Wandler.kodiere(eingabe, ausgabe);
+
+    pfc.fstr("gewandelt: $").sa(ausgabe).pr();
+    
+    var String_16 klartextRueck;
+    if( b64Wandler.dekodiere(ausgabe,klartextRueck) != 1 )
+    {
+       pfc.pr("UnitTestBase64::test() fehlgeschlagen");
+       return;
+    }
+    
+    //pfc.fstr("rueck-gewandelt: $").sa(klartextRueck).pr();
+    
+    
+    eingabe.assign("rrr");
+    ausgabe.clear();
+    b64Wandler.kodiere(eingabe, ausgabe);
+    
+    if(ausgabe.equals("cnJy") != 1)
+    {
+       pfc.pr("UnitTestBase64::test() fehlgeschlagen (2)");
+       return;
+    }
+    
+    eingabe.assign("12");
+    ausgabe.clear();
+    b64Wandler.kodiere(eingabe, ausgabe);
+    
+    if(ausgabe.equals("MTI=") != 1)
+    {
+       pfc.pr("UnitTestBase64::test() fehlgeschlagen (3)");
+       return;
+    }
+    
+    eingabe.assign("o");
+    ausgabe.clear();
+    b64Wandler.kodiere(eingabe, ausgabe);
+    
+    if(ausgabe.equals("bw==") != 1)
+    {
+       pfc.pr("UnitTestBase64::test() fehlgeschlagen (4)");
+       return;
+    }
+    
+    
+    eingabe.assign("123o");
+    ausgabe.clear();
+    b64Wandler.kodiere(eingabe, ausgabe);
+    
+    if(ausgabe.equals("MTIzbw==") != 1)
+    {
+       pfc.pr("UnitTestBase64::test() fehlgeschlagen (5)");
+       return;
+    }
+    
+    eingabe.assign("123op");
+    ausgabe.clear();
+    b64Wandler.kodiere(eingabe, ausgabe);
+    
+    if(ausgabe.equals("MTIzb3A=") != 1)
+    {
+       pfc.pr("UnitTestBase64::test() fehlgeschlagen (6)");
+       return;
+    }
+    klartextRueck.clear();
+    if( (b64Wandler.dekodiere(ausgabe,klartextRueck) != 1) ||  (klartextRueck.equals("123op") != 1) )
+    {
+       pfc.pr("UnitTestBase64::test() fehlgeschlagen (7)");
+       return;
+    }
+    
+    UnitTestBase64::testeEinenFall("Alle meine Entchen schwimmen auf dem See",
+                                   "QWxsZSBtZWluZSBFbnRjaGVuIHNjaHdpbW1lbiBhdWYgZGVtIFNlZQ==");
+                                   
+    UnitTestBase64::testeEinenFall("öäü",//Achtung: UTF8 !
+                                   "w7bDpMO8");
+                                   
+    UnitTestBase64::testeEinenFall("123abc___+++***AAA",
+                                   "MTIzYWJjX19fKysrKioqQUFB");
+    
+    UnitTestBase64::testeEinenFall("!\"§$%&/()=?",
+                                   "ISLCpyQlJi8oKT0/");    
+                                   
+    UnitTestBase64::testeEinenFall("abcde",
+                                   "YWJjZGU=");    
+    
+    UnitTestBase64::testeEinenFall("abcdef",
+                                   "YWJjZGVm");     
+                                   
+    UnitTestBase64::testeEinenFall("abcdefg",
+                                   "YWJjZGVmZw==");     
+    
+    
+    pfc.pr("UnitTestBase64::test() erfolgreich");
+}
+
+ void UnitTestBase64::testeEinenFall(&char klartext_char[],&char erwartetKodiert_char[])
+ {
+    var PrintfClass pfc;
+    var Base64 b64Wandler;
+    
+    var String_16 klartext(klartext_char);
+    var String_16 erwartetKodiert(erwartetKodiert_char);
+    
+    var String_16 ausgabe;
+    b64Wandler.kodiere(klartext, ausgabe);
+    
+    if(ausgabe.equals(erwartetKodiert) != 1)
+    {
+       pfc.fstr("UnitTestBase64::testeEinenFall($,$) fehlgeschlagen (1)").sa(klartext).sa(erwartetKodiert).pr();
+       return;
+    }
+    var String_16 klartextRueck;
+    if( (b64Wandler.dekodiere(ausgabe,klartextRueck) != 1) ||  (klartextRueck.equals(klartext) != 1) )
+    {
+       pfc.fstr("UnitTestBase64::testeEinenFall($,$) fehlgeschlagen (2)").sa(klartext).sa(erwartetKodiert).pr();
+       return;
+    }
+ }

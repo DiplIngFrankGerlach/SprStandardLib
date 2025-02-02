@@ -1,0 +1,9 @@
+
+
+
+
+class StringUnitTest
+{
+methods:
+   static void run();
+};

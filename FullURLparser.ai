@@ -1,0 +1,125 @@
+Import {
+   "Strings.ad",
+   "System.ad",
+   "ZKNuetzlich.ad",
+   "FullURLparser.ad"
+}
+
+int FullURLparser::istZahl(char z)
+{
+    switch(z)
+    {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':{return 1;}; break;
+        default:{};
+    }
+    return 0;
+}
+
+
+
+
+int FullURLparser::parse(&String_16 eingabe,&String_16 dnsNameOrIP,&int port, &String_16 filePath,&int ist_https)
+{
+   var int eLaenge = eingabe.length();
+   var int ist_http=0;
+   var int stelle;
+  
+   if(eingabe.startsWith("http://") == 1) {ist_http = 1; stelle = 7;}
+   if(eingabe.startsWith("https://") == 1) {ist_https = 1; stelle = 8;}else{ist_https=0;}
+
+
+   if((ist_http==1) ||(ist_https==1))
+   {  
+       var int endeGefunden = 0;
+       dnsNameOrIP.clear();
+       var char z = 'X';
+       while((stelle < eLaenge) && (endeGefunden ==0) )
+       {
+          z = eingabe.getAt(stelle);
+          if( (z != '/') && (z != ':') )
+          {
+             dnsNameOrIP.append(z); 
+          }
+          else{ endeGefunden = 1; }
+          stelle++;
+       }
+       if(dnsNameOrIP.length() == 0){return -1;}
+       if(z == ':')
+       { 
+          var String_16 portS;
+          while((stelle < eLaenge) && (z != '/') )
+          {
+             z = eingabe.getAt(stelle);
+             if( (z != '/') && (this.istZahl(z) == 1) )
+             {
+                portS.append(z); 
+             }
+             stelle++;
+          }
+          port = portS.asNumber();
+       }
+       else 
+       { 
+          if(ist_http==1){port = 80;}
+          else {port = 443;}
+       }
+
+       filePath.clear();
+       eingabe.subString(filePath,stelle,eLaenge - 1);
+       return 1; 
+   }else {pfc.fstr("URL muss mit http oder https anfangen").pr();}
+   return 0;//error
+}
+
+void FullURLparser::UnitTest()
+{
+    var String_16 url("http://www.bosch.de:8888/eine/Datei.html");
+    var String_16 dns;
+    var int port;
+    var String_16 fp;
+    var int erfolg = 0;
+    var int ist_https;
+    if(this.parse( url,dns,port,fp,ist_https) == 1)
+    {
+       if(dns.equals("www.bosch.de")== 1)
+       {
+           if(port == 8888)
+           {
+              if(fp.equals("eine/Datei.html") == 1)
+              { erfolg = 1;}
+           }
+       }
+    }
+    if(erfolg == 0){ pfc.fstr("FullURLparser::UnitTest() Fehler 1").pr();}
+
+    url.assign("htx://www.porsche.de");
+    if(this.parse( url,dns,port,fp,ist_https) == 1) 
+    { pfc.fstr("FullURLparser::UnitTest() Fehler 2").pr();}
+
+    url.assign("http://www.porsche.de");
+    erfolg = 0;
+    if(this.parse( url,dns,port,fp,ist_https) == 1)
+    {
+       if(dns.equals("www.porsche.de")== 1)
+       {
+           if(port == 80)
+           {
+              if(fp.equals("") == 1)
+              { erfolg = 1;}
+           }
+       }
+    }
+    if(erfolg == 0){ pfc.fstr("FullURLparser::UnitTest() Fehler 3").pr();}
+}
+
+
+
